@@ -95,6 +95,8 @@ void common_hal_busdisplay_busdisplay_construct(busdisplay_busdisplay_obj_t *sel
         common_hal_time_delay_ms(delay_length_ms);
         i += 2 + data_size;
     }
+    // CIRCUITPY-CHANGE
+    port_busdisplay_initialized(self, init_sequence, init_sequence_len);
 
     // Always set the backlight type in case we're reusing memory.
     self->backlight_inout.base.type = &mp_type_NoneType;
@@ -206,6 +208,16 @@ static const displayio_area_t *_get_refresh_areas(busdisplay_busdisplay_obj_t *s
     return NULL;
 }
 
+// CIRCUITPY-CHANGE: hooks for simulators, see BusDisplay.h.
+MP_WEAK void port_busdisplay_initialized(busdisplay_busdisplay_obj_t *self, const uint8_t *init_sequence, uint16_t init_sequence_len) {
+}
+
+MP_WEAK void port_busdisplay_pixels_sent(busdisplay_busdisplay_obj_t *self, const displayio_area_t *area, const uint8_t *pixels, uint32_t length) {
+}
+
+MP_WEAK void port_busdisplay_refreshed(busdisplay_busdisplay_obj_t *self) {
+}
+
 static void _send_pixels(busdisplay_busdisplay_obj_t *self, uint8_t *pixels, uint32_t length) {
     if (!self->bus.data_as_commands) {
         self->bus.send(self->bus.bus, DISPLAY_COMMAND, CHIP_SELECT_TOGGLE_EVERY_BYTE, &self->write_ram_command, 1);
@@ -295,6 +307,8 @@ static bool _refresh_area(busdisplay_busdisplay_obj_t *self, const displayio_are
         displayio_display_bus_begin_transaction(&self->bus);
         _send_pixels(self, (uint8_t *)buffer, subrectangle_size_bytes);
         displayio_display_bus_end_transaction(&self->bus);
+        // CIRCUITPY-CHANGE
+        port_busdisplay_pixels_sent(self, &subrectangle, (uint8_t *)buffer, subrectangle_size_bytes);
 
         // TODO(tannewt): Make refresh displays faster so we don't starve other
         // background tasks.
@@ -317,6 +331,8 @@ static void _refresh_display(busdisplay_busdisplay_obj_t *self) {
         current_area = current_area->next;
     }
     displayio_display_core_finish_refresh(&self->core);
+    // CIRCUITPY-CHANGE
+    port_busdisplay_refreshed(self);
 }
 
 void common_hal_busdisplay_busdisplay_set_rotation(busdisplay_busdisplay_obj_t *self, int rotation) {

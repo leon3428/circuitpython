@@ -186,12 +186,16 @@ extern void common_hal_mcu_enable_interrupts(void);
 // Track stack usage. Expose results via ustack module.
 #define MICROPY_MAX_STACK_USAGE       (0)
 
-#define UINT_FMT "%u"
-#define INT_FMT "%d"
-#ifdef __LP64__
+// CIRCUITPY-CHANGE: wasm32 has 32-bit long and defines size_t as unsigned long,
+// so use long there to keep mp_uint_t and size_t the same type.
+#if defined(__LP64__) || defined(__wasm32__)
+#define UINT_FMT "%lu"
+#define INT_FMT "%ld"
 typedef long mp_int_t; // must be pointer size
 typedef unsigned long mp_uint_t; // must be pointer size
 #else
+#define UINT_FMT "%u"
+#define INT_FMT "%d"
 // These are definitions for machines where sizeof(int) == sizeof(void*),
 // regardless of actual size.
 typedef int mp_int_t; // must be pointer size
@@ -619,7 +623,8 @@ void background_callback_run_all(void);
 #define CIRCUITPY_SAVES_PARTITION_SIZE 0
 #endif
 
-#if defined(__GNUC__) && !defined(__ZEPHYR__)
+// CIRCUITPY-CHANGE: the check is about GCC; clang (wasm port) also defines __GNUC__.
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ZEPHYR__)
 #if __GNUC__ < CIRCUITPY_MIN_GCC_VERSION
 // (the 3 level scheme here is required to get expansion & stringization
 // correct)

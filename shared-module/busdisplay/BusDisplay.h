@@ -41,3 +41,13 @@ void busdisplay_busdisplay_background(busdisplay_busdisplay_obj_t *self);
 void release_busdisplay(busdisplay_busdisplay_obj_t *self);
 void reset_busdisplay(busdisplay_busdisplay_obj_t *self);
 void busdisplay_busdisplay_collect_ptrs(busdisplay_busdisplay_obj_t *self);
+
+// CIRCUITPY-CHANGE: hooks for simulators (ports/wasm) to observe what reaches
+// the panel. All are weak no-ops by default.
+// The init sequence has been sent.
+void port_busdisplay_initialized(busdisplay_busdisplay_obj_t *self, const uint8_t *init_sequence, uint16_t init_sequence_len);
+// Pixels for area (display coordinates, before colstart/rowstart) have been
+// sent after the column/row address commands for it.
+void port_busdisplay_pixels_sent(busdisplay_busdisplay_obj_t *self, const displayio_area_t *area, const uint8_t *pixels, uint32_t length);
+// A refresh pass has finished.
+void port_busdisplay_refreshed(busdisplay_busdisplay_obj_t *self);

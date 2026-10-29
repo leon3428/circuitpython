@@ -101,6 +101,9 @@ void port_yield(void);
 // A default weak implementation is provided that does nothing.
 void port_post_boot_py(bool heap_valid);
 
+// Called after code.py (or main.py etc.) has finished, before cleanup.
+void port_post_code_py(void);
+
 // Some ports want to add information to boot_out.txt.
 // A default weak implementation is provided that does nothing.
 void port_boot_info(void);

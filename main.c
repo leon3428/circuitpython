@@ -495,6 +495,8 @@ static bool __attribute__((noinline)) run_code_py(safe_mode_t safe_mode, bool *s
         } else {
             serial_write_compressed(MP_ERROR_TEXT("\nCode done running.\n"));
         }
+        // CIRCUITPY-CHANGE: lets the wasm simulator know the program finished.
+        port_post_code_py();
 
 
         // Finished executing python code. Cleanup includes filesystem flush and a board reset.

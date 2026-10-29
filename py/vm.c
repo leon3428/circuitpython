@@ -236,6 +236,11 @@ mp_vm_return_kind_t MICROPY_WRAP_MP_EXECUTE_BYTECODE(mp_execute_bytecode)(mp_cod
 #define MARK_EXC_IP_GLOBAL() { code_state->ip = ip; }
 #endif
 
+// CIRCUITPY-CHANGE: per-opcode hook, used by the wasm port's virtual-time cost model.
+#ifndef MICROPY_VM_HOOK_DISPATCH
+#define MICROPY_VM_HOOK_DISPATCH
+#endif
+
 #if MICROPY_OPT_COMPUTED_GOTO
     #include "py/vmentrytable.h"
     // CIRCUITPY-CHANGE
@@ -243,6 +248,7 @@ mp_vm_return_kind_t MICROPY_WRAP_MP_EXECUTE_BYTECODE(mp_execute_bytecode)(mp_cod
     #define ONE_TRUE_DISPATCH() one_true_dispatch : do { \
         TRACE(ip); \
         MARK_EXC_IP_GLOBAL(); \
+        MICROPY_VM_HOOK_DISPATCH \
         goto *(void *)((char *) && entry_MP_BC_LOAD_CONST_FALSE + entry_table[*ip++]); \
 } while (0)
     #define DISPATCH() do { goto one_true_dispatch; } while (0)
@@ -252,6 +258,7 @@ mp_vm_return_kind_t MICROPY_WRAP_MP_EXECUTE_BYTECODE(mp_execute_bytecode)(mp_cod
         TRACE(ip); \
         MARK_EXC_IP_GLOBAL(); \
         TRACE_TICK(ip, sp, false); \
+        MICROPY_VM_HOOK_DISPATCH \
         goto *entry_table[*ip++]; \
 } while (0)
     #endif
@@ -335,6 +342,7 @@ dispatch_loop:
                 TRACE(ip);
                 MARK_EXC_IP_GLOBAL();
                 TRACE_TICK(ip, sp, false);
+                MICROPY_VM_HOOK_DISPATCH
                 switch (*ip++) {
                 #endif
 
